@@ -1,8 +1,10 @@
 const assert = require('assert');
 
-class cfg {
+const BasicBlock = require('./block');
+
+class CFG {
 	constructor(entry) {
-		assert.ok(entry instanceof vertex, 'expected entry to be vertex');
+		assert.ok(entry instanceof Vertex, 'expected entry to be vertex');
 		this.entry = entry;
 	}
 	AllVert() {
@@ -26,17 +28,23 @@ class cfg {
 			const v = stack.pop();
 			action(v);
 			used.add(v.num);
-			const childs = v.Succ().filter(c => !used.has(c.num));
+			const childs = v.Succ().filter(c => !used.has(c.block.num));
 			stack.push(...childs);
 		}
 	}
+	toDot() {
+
+	}
+	toSSA() {
+
+	}
 }
 
-class vertex {
-	constructor(num, block) {
+class Vertex {
+	constructor(block) {
+		assert.ok(block instanceof BasicBlock);
 		this.inEdges = [];
 		this.outEdges = [];
-		this.num = num;
 		this.block = block;
 	}
 	Succ() {
@@ -51,18 +59,25 @@ class vertex {
 	OutEdge() {
 		return this.outEdges;
 	}
+	AppendChild(child, label) {
+		assert.ok(child instanceof Vertex, 'expected child to be vertex');
+		const e = new Edge(this, child, label);
+		this.outEdges.push(e);
+	}
 }
 
-class edge {
-	constructor(v1, v2) {
-		assert.ok(v1 instanceof vertex, 'expected v1 to be vertex');
-		assert.ok(v2 instanceof vertex, 'expected v2 to be vertex');
+class Edge {
+	constructor(v1, v2, label) {
+		assert.ok(v1 instanceof Vertex, 'expected v1 to be vertex');
+		assert.ok(v2 instanceof Vertex, 'expected v2 to be vertex');
+		assert.ok(typeof label === 'string', 'expected label to be string');
 		this.v1 = v1;
 		this.v2 = v2;
+		this.label = label;
 	}
 }
 
 const exp = module.exports;
-exp.cfg = cfg;
-exp.vertex = vertex;
-exp.edge = edge;
+exp.CFG = CFG;
+exp.Vertex = Vertex;
+exp.Edge = Edge;
