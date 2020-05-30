@@ -9,7 +9,7 @@ class IR {
 	}
 
 	SetEntryPoint(entry) {
-		assert.ok(entry instanceof BasicBlock, 'expected entry to be BasicBlock');
+		assert.ok(entry instanceof BasicBlock.BasicBlock, 'expected entry to be BasicBlock');
 		if (!this.cfg) {
 			const v = new CFG.Vertex(entry);
 			this.cfg = new CFG.CFG(v);
@@ -19,6 +19,10 @@ class IR {
 			this.currentVertex = this.vertices.get(entry.num);
 		}
 		this.entry = entry;
+	}
+
+	GetInsertBlock() {
+		return this.entry;
 	}
 
 	CreateCondBr(cond, consequent, alternate) {
@@ -42,11 +46,23 @@ class IR {
 		}
 	}
 
+	CreateBr(b) {
+		const v = this.vertices.get(b.num);
+		if (v) {
+			this.currentVertex.AppendChild(v, '');
+		} else {
+			const newV = new CFG.Vertex(b);
+			this.vertices.set(b.num, newV);
+			this.currentVertex.AppendChild(newV, '');
+		}
+	}
+
 	CreateDeclaration(name, value) {
 		this.entry.addInstruction(new BasicBlock.Assignment(name, value));
 	}
 
 	CreateAssignment(name, value) {
+		this.cfg.vars.add(name);
 		this.entry.addInstruction(new BasicBlock.Assignment(name, value));
 	}
 
@@ -94,3 +110,5 @@ class IR {
 		this.entry.addInstruction(new BasicBlock.Return(arg));
 	}
 }
+
+module.exports = IR;
