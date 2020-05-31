@@ -93,7 +93,7 @@ class CFG {
 		});
 		this.dominators(this.preOrder);
 		const DF = new Map();
-		this.preOrder.reverse().forEach(x => {
+		this.preOrder.slice().reverse().forEach(x => {
 			DF.set(x.index, new Set());
 			x.Succ().forEach(y => {
 				if (y.idom.index !== x.index) {
@@ -102,8 +102,8 @@ class CFG {
 			});
 			x.Children().forEach(z => {
 				DF.get(z.index).forEach(y => {
-					if (y.idom.index !== x.index) {
-						DF.get(x.index).add(y.index);
+					if (this.preOrder[y].idom.index !== x.index) {
+						DF.get(x.index).add(y);
 					}
 				})
 			});
@@ -181,24 +181,25 @@ class CFG {
 		const counters = new Map();
 		const stacks = new Map();
 		this.vars.forEach(v => {
-			counters[v] = 0;
-			stacks[v] = [];
+			counters.set(v, 0);
+			stacks.set(v, []);
 		});
 		this.Search(counters, stacks, this.entry);
 	}
 
 	Search(counters, stacks, x) {
 		x.block.instructions.forEach(stmt => {
-			if (stmt instanceof BasicBlock.Assignment) {
+			if (stmt instanceof BasicBlock.Assignment || stmt instanceof BasicBlock.Cond || stmt instanceof BasicBlock.Return) {
 				stacks.forEach((v, k) => {
-					stmt.applyVars(false, k, v[v.length - 1]);
+					stmt.applyVars(k, v[v.length - 1], false);
 				});
 			}
 			if (stmt instanceof BasicBlock.Assignment || stmt instanceof BasicBlock.Phi) {
-				const i = counters.get(stmt.name);
-				stmt.applyVars(true, stmt.name, i);
-				counters.set(stmt.name, i + 1);
-				stacks.get(stmt.name).push(i);
+				const name = stmt.name;
+				const i = counters.get(name);
+				stmt.applyVars(name, i, true);
+				counters.set(name, i + 1);
+				stacks.get(name).push(i);
 			}
 		});
 		x.Succ().forEach(y => {
@@ -206,7 +207,7 @@ class CFG {
 			y.block.instructions.forEach(stmt => {
 				if (stmt instanceof BasicBlock.Phi) {
 					stacks.forEach((v, k) => {
-						stmt.applyOperand(j, k, v[v.length - 1]);
+						stmt.applyOperand(k, v[v.length - 1], j);
 					});
 				}
 			});
@@ -258,11 +259,6 @@ class Vertex {
 
 	Succ() {
 		return this.outEdges.map(e => e.v2);
-		// const res = [];
-		// this.dfs(v => {
-		// 	res.push(v);
-		// });
-		// return res;
 	}
 
 	Pred() {
@@ -272,7 +268,7 @@ class Vertex {
 	Children() {
 		const res = [];
 		this.dfs(v => {
-			if (v.idom.index === this.index) {
+			if (v.idom && v.idom.index === this.index) {
 				res.push(v);
 			}
 		});
@@ -291,6 +287,7 @@ class Vertex {
 		assert.ok(child instanceof Vertex, 'expected child to be vertex');
 		const e = new Edge(this, child, label);
 		this.outEdges.push(e);
+		child.inEdges.push(e);
 	}
 
 	dotString() {

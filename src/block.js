@@ -28,13 +28,12 @@ class Assignment extends Value {
 		this.expr = expr;
 	}
 
-	applyVars(isLeft, name, count) {
+	applyVars(name, count, isLeft) {
 		if (isLeft && this.name === name) {
 			this.oldName = this.name;
 			this.name += '_' + count;
 		}
-		this.arg0.applyVars(name, count);
-		this.arg1.applyVars(name, count);
+		this.expr.applyVars(name, count);
 	}
 
 	toString() {
@@ -146,13 +145,17 @@ class Phi extends Value {
 		this.args = args;
 	}
 
-	applyVars(isLeft, name, count) {
-		this.oldName = this.name;
-		this.name += '_' + count;
+	applyVars(name, count) {
+		if (name === this.name) {
+			this.oldName = this.name;
+			this.name += '_' + count;
+		}
 	}
 
-	applyOperand(j, name, count) {
-		this.args[j] = name + '_' + count;
+	applyOperand(name, count, j) {
+		if (this.oldName === name || this.name === name) {
+			this.args[j] = name + '_' + count;
+		}
 	}
 
 	toString() {
