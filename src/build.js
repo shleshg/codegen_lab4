@@ -100,6 +100,8 @@ function generateWhile(ir, ast) {
 	generateBlocks(ir, ast.body);
 
 	ir.CreateCondBr(cond, loopBB, postLoop);
+
+	ir.SetEntryPoint(postLoop);
 }
 
 function generateBlocks(ir, ast) {

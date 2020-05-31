@@ -250,7 +250,7 @@ class Vertex {
 		while (stack.length !== 0) {
 			const v = stack.pop();
 			action(v);
-			used.add(v.num);
+			used.add(v.block.num);
 			const childs = v.Succ().filter(c => !used.has(c.block.num));
 			stack.push(...childs);
 		}
@@ -298,8 +298,8 @@ class Vertex {
 	}
 
 	toDot() {
-		const text = '\t' + this.dotString();
-		return text + '  [shape = rectangle]';
+		const text = '\t"' + this.dotString();
+		return text + '"  [shape = rectangle]';
 	}
 }
 
@@ -314,7 +314,7 @@ class Edge {
 	}
 
 	toDot() {
-		return '\t' + this.v1.dotString() + ' -> ' + this.v2.dotString() + '  [label=\'' + this.label + '\']';
+		return '\t"' + this.v1.dotString() + '" -> "' + this.v2.dotString() + '"  [label="' + this.label + '"]';
 	}
 }
 

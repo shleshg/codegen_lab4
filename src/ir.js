@@ -35,7 +35,7 @@ class IR {
 		} else {
 			const newV = new CFG.Vertex(consequent);
 			this.vertices.set(consequent.num, newV);
-			this.currentVertex.AppendChild(newV, 'no');
+			this.currentVertex.AppendChild(newV, 'yes');
 		}
 		if (alternateV) {
 			this.currentVertex.AppendChild(alternateV, 'no');
